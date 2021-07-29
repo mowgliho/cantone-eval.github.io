@@ -1,5 +1,5 @@
 class Manager {
-  static answerInterval = 2;
+  static answerInterval = 10;
 
   constructor(doc, div) {
     doc.create('h2','Cantone Evaluation',div);
