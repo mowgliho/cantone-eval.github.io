@@ -56,10 +56,10 @@ with open(input_fn, 'r') as f:
 ids = {}
 for row in rows:
   if row['id'] not in ids:
-    ids[row['id']] = ['ref']
-  ids[row['id']].append(row['speaker'])
+    ids[row['id']] = set(['ref'])
+  ids[row['id']].add(row['speaker'])
 
-all_speakers = set(functools.reduce(lambda a,b: a + b, ids.values()))
+all_speakers = set(functools.reduce(lambda a,b: a | b, ids.values()))
 speakers = set(list(all_speakers))
 speakers.remove('ref')
 
