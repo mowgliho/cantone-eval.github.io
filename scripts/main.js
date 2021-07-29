@@ -17,7 +17,7 @@ class Manager {
     const that = this;
 
     let div = doc.create('div',null,parentDiv);
-    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA". Your answers will be saved automatically every ' + Manager.answerInterval + ' rounds.',div);
+    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA". You will be able to go back and change your answers, but if you go back you will have to resubmit your answers from taht point. Your answers will be saved automatically every ' + Manager.answerInterval + ' rounds.',div);
     doc.create('hr',null,div);
     doc.create('label','What is your evaluator ID? ',div);
     let input = doc.create('input',null,div);
