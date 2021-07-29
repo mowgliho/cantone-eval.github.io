@@ -10,3 +10,13 @@ class DocumentWrapper {
     return ret;
   }
 }
+
+callCgi = function(url, body, callback) {
+  fetch(url, { method: 'POST', body: body}).then(
+    (response) => {response.text().then(function(x) {
+      callback(JSON.parse(x));
+    })}).catch(
+    (error) => {console.log("error", error)});
+}
+
+
