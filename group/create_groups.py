@@ -81,6 +81,8 @@ for x in os.listdir(WAV):
   tokens = basename.split('_')
   rnd = tokens[-1]
   speaker = tokens[0]
+  if speaker not in data:
+    continue
   for row in data[speaker]:
     if row['round'] == rnd:
       row.update({'in_wav': os.path.join(WAV,x), 'out_wav': '%s_%s.wav' % (speaker, rnd)})
