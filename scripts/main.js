@@ -36,7 +36,11 @@ class Manager {
     this.testLabel = doc.create('h3',null,div);
     let testDiv = doc.create('div',null,div);
     testDiv.style.width = '400px';
+
     let playButton = doc.create('button','Play', testDiv);
+    playButton.style.width = '100%';
+    playButton.onclick = function() { that.play() };
+
     doc.create('p',null,testDiv);
     let buttonDiv = doc.create('div',null,testDiv);
     this.toneButtons = {};
@@ -45,8 +49,11 @@ class Manager {
       this.toneButtons[tone].style.width = '14.28%'
       this.toneButtons[tone].onclick = function() { that.select(tone)};
     }
-    playButton.style.width = '100%';
-    playButton.onclick = function() { that.play() };
+    doc.create('p',null,testDiv);
+
+    let backButton = doc.create('button','Previous Stimuli',testDiv);
+    backButton.style.width = '100%';
+    backButton.onclick = function() { that.back() };
 
     return div;
   }
@@ -71,6 +78,11 @@ class Manager {
   play() {
     for(const button of Object.values(this.toneButtons)) button.disabled = false;
     (new Audio(Config.audioUrl + this.rounds[this.round]['fn'])).play();
+  }
+
+  back() {
+    this.round = Math.max(0, this.round -1);
+    this.startRound();
   }
 
   startTask(data) {

@@ -9,6 +9,9 @@ DIR = 'evaluations'
 
 print("Content-type: text/plain\n")
 try: 
+  def key(row):
+    return row['speaker'] + '_' + row['fn']
+
   cgitb.enable()
   form = cgi.FieldStorage()
 
@@ -18,13 +21,27 @@ try:
   else:
     answer_fn = os.path.join(DIR, eid + '_answers.tsv')
 
+    inds = {}
     if os.path.exists(answer_fn):
       with open(answer_fn,'r') as f:
         rows = [row for row in csv.DictReader(f, dialect = csv.excel_tab)]
+        for i,row in enumerate(rows):
+          inds[key(row)] = i
     else:
       rows = []
     
-    rows += json.loads(form['data'].value)
+    append = []
+    amend = []
+    for i,row in enumerate(json.loads(form['data'].value)):
+      if key(row) in inds:
+        amend.append((inds[key(row)], row))
+      else:
+        append.append(row)
+
+    for i,row in amend:
+      rows[i] = row
+ 
+    rows += append
 
     if len(rows) > 0:
       with open(answer_fn,'w') as f:
