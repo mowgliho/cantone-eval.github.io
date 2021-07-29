@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-#  python create_groups.py groups.tsv out groups
+# python create_groups.py evaluations/master.tsv ../web/ evaluations
 # expects
 #   first argument is a tsv of [id, speaker]
 #   second argument is directory to put output
@@ -46,6 +46,7 @@ DATA = 'data'
 REF = 'ref'
 WAV = 'wav'
 FN = 'prod_test_round.tsv'
+SUFFIX = '_samples'
 LOUDNESS = -19#https://developers.google.com/assistant/tools/audio-loudness
 
 #read which speakers go to which ids
@@ -103,12 +104,19 @@ for x, speakers in ids.items():
       rows = [row for row in data[speaker] if row['seg'] == seg]
       random.shuffle(rows)
       for row in rows:
-        group_data[x].append({'seg': row['seg'], 'syl': row['syl'],'tone': row['tone'], 'fn': row['out_wav']})
+        group_data[x].append({
+          'seg': row['seg'], 
+          'syl': row['syl'],
+          'tone': row['tone'], 
+          'round': row['round'], 
+          'fn': row['out_wav'],
+          'speaker': speaker
+        })
         copy_wav(output_dir, row['in_wav'], row['out_wav'])
 
 # write tsvs for each id
 for x, rows in group_data.items():
-  with open(os.path.join(group_dir,x + '.tsv'),'w') as f:
+  with open(os.path.join(group_dir,x + SUFFIX + '.tsv'),'w') as f:
     writer = csv.DictWriter(f, dialect = csv.excel_tab, fieldnames = rows[0].keys())
     writer.writeheader()
     for row in rows:
