@@ -16,8 +16,14 @@ class Manager {
     const that = this;
 
     let div = doc.create('div',null,parentDiv);
-    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA".', div);
-    doc.create('p', 'The system will log you answer and move automatically to the next round. Via the "Previous Stimuli" button, you will be able to go back and change your answers, and if you\'ve already answered a round you will be able to click on "Next Stimuli" move on to the next stimuli.', div)
+    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA". A screenshot of what it will look like is below', div);
+
+    doc.create('h3', 'Screenshot: ', div);
+    let image = doc.create('img',null, div);
+    image.src = 'img/screenshot.png';
+    image.style.border = '1px solid';
+
+    doc.create('p', 'The system will log your answer and move automatically to the next round. Via the "Previous Stimuli" button, you will be able to go back and change your answers, and if you\'ve already answered a round you will be able to click on "Next Stimuli" move on to the next stimuli.', div)
     doc.create('p', 'Your answers will be saved automatically every ' + Manager.answerInterval + ' rounds.',div);
     doc.create('p', 'You can try it out with the evaluator ID "demo".',div);
     doc.create('hr',null,div);
