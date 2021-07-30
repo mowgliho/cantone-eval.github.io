@@ -10,14 +10,16 @@ class Manager {
     this.doneDiv = this.buildDoneDiv(doc, div);
     this.testDiv.style.display = 'none';
     this.doneDiv.style.display = 'none';
-
   }
 
   buildStartDiv(doc, parentDiv) {
     const that = this;
 
     let div = doc.create('div',null,parentDiv);
-    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA". You will be able to go back and change your answers, but if you go back you will have to resubmit your answers from taht point. Your answers will be saved automatically every ' + Manager.answerInterval + ' rounds.',div);
+    doc.create('p', 'Thanks for helping out! In the following, you will see a button to play an audio file, and 6 buttons with characters on them. Please then click the character you think most corresponds to the sound heard. If the audio file is bad or sounds nothing like any of the characters, please click "NA".', div);
+    doc.create('p', 'The system will log you answer and move automatically to the next round. Via the "Previous Stimuli" button, you will be able to go back and change your answers, and if you\'ve already answered a round you will be able to click on "Previous Stimuli" move on to the next stimuli.', div)
+    doc.create('p', 'Your answers will be saved automatically every ' + Manager.answerInterval + ' rounds.',div);
+    doc.create('p', 'You can try it out with the evaluator ID "demo".',div);
     doc.create('hr',null,div);
     doc.create('label','What is your evaluator ID? ',div);
     let input = doc.create('input',null,div);
@@ -53,15 +55,20 @@ class Manager {
     doc.create('p',null,testDiv);
 
     let backButton = doc.create('button','Previous Stimuli',testDiv);
-    backButton.style.width = '100%';
+    backButton.style.width = '50%';
     backButton.onclick = function() { that.back() };
+    this.forwardButton = doc.create('button','Next Stimuli', testDiv);
+    this.forwardButton.style.width = '50%';
+    this.forwardButton.onclick = function() { that.forward() };
+
+    this.savedAnswers = doc.create('p', 'Answers saved!', div);
 
     return div;
   }
 
   buildDoneDiv(doc, parentDiv) {
     let div = doc.create('div',null,parentDiv);
-    doc.create('h3','All done! Thanks!', div);
+    this.doneMessage = doc.create('h3',null, div);
     return div;
   }
 
@@ -86,6 +93,11 @@ class Manager {
     this.startRound();
   }
 
+  forward() {
+    this.round += 1;
+    this.startRound();
+  }
+
   startTask(data) {
     if(data['data'] == null) {
       this.errorMessage.innerHTML = 'ID not found. Are you sure that you have the right ID?';
@@ -95,7 +107,9 @@ class Manager {
       this.doneDiv.style.display = 'none';
       this.rounds = data['data'];
       this.round = 0;
+      this.recentlySaved = 0;
       this.answers = [];
+      this.answeredRounds = new Set();
       this.startRound();
     }
   }
@@ -114,12 +128,13 @@ class Manager {
       rate_seg: tone == 'NA'? 'NA':info['seg'],
       rate_tone: tone == 'NA'? 'NA':tone
     });
+    this.answeredRounds.add(info['fn']);
     this.nextRound();
   }
 
   nextRound() {
     this.round += 1;
-    if(this.round % Manager.answerInterval == 0 || this.round >= this.rounds.length) {
+    if(this.answers.length == Manager.answerInterval || this.round >= this.rounds.length) {
       this.uploadAnswers()
     } else {
       this.startNextRound()
@@ -131,18 +146,22 @@ class Manager {
       this.startDiv.style.display = 'none';
       this.testDiv.style.display = 'none';
       this.doneDiv.style.display = 'block';
+      this.doneMessage.innerHTML = 'All done ' + this.id + '! Thanks!';
     } else {
       this.startRound();
     }
   }
 
   startRound() {
+    this.recentlySaved = Math.max(0, this.recentlySaved - 1);
     let info = this.rounds[this.round];
     this.testLabel.innerHTML = 'Stimuli ' + (this.round + 1) + '/' + this.rounds.length;
     for(const [key,button] of Object.entries(this.toneButtons)) {
       button.innerHTML = Tones.tones.includes(key)?Tones.chars[info['seg']][key]: 'NA';
       button.disabled = true;
     }
+    this.forwardButton.disabled = this.answeredRounds.has(info['fn'])?false: true;
+    this.savedAnswers.style.display = this.recentlySaved == 0? 'none': 'block';
   }
 
   uploadAnswers() {
@@ -154,6 +173,7 @@ class Manager {
 
     callCgi(Config.uploadCgiUrl, fd, function(x) {
       console.log(x);
+      that.recentlySaved = 2;
       that.answers = [];
       that.startNextRound();
     })
