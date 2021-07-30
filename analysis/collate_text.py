@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# python collate_text.py results/info.tsv data/ results/
 
 import sys
 import os

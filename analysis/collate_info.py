@@ -21,6 +21,7 @@ for pid in os.listdir(data_dir):
       if line.strip().startswith('end\tcompleted'):
         finished = True
   if not finished:
+    print('unfinished: ', pid)
     continue
   
   # load info

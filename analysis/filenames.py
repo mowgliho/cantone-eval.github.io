@@ -1,3 +1,12 @@
+import os
+
+def clean_pcpt_row(pid, row):
+  syl = os.path.splitext(os.path.basename(row['file']))[0]
+  seg = syl[:-1]
+  tone = syl[-1]
+  return { 'id': pid, 'round': row['round'], 'syl': syl, 'seg': seg, 'tone': tone, 'guess': row['guessed_tone']}
+
+
 filenames = {
   'info': 'info.txt',
   'progress': 'progress.txt',
@@ -29,6 +38,12 @@ filenames = {
         'Q: What other comments/feedback do you have?',
         'Q: Did you come across any bugs/errors?'
       ]
+    }
+  },
+  'tsv': {
+    'pcpt_canto': {
+      'filename': 'pcpt_canto.tsv',
+      'row_fn': clean_pcpt_row
     }
   }
 }
