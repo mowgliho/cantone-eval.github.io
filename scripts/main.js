@@ -33,9 +33,10 @@ class Manager {
     const that = this;
 
     let div = doc.create('div',null,parentDiv);
+    div.style.width = '400px';
+    div.style.margin = 'auto';
     this.testLabel = doc.create('h3',null,div);
     let testDiv = doc.create('div',null,div);
-    testDiv.style.width = '400px';
 
     let playButton = doc.create('button','Play', testDiv);
     playButton.style.width = '100%';
