@@ -15,6 +15,11 @@ data <- lapply(list.files('../results/'), function(f) read_tsv(file.path(data_di
 names(data) <- list.files(data_dir)
 ```
 
+# Overall
+
+```{r echo=F}
+data$info.tsv %>% group_by(visual,audio) %>% summarize(n=n())
+```
 # Listening Training
 
 ```{r echo=F}
