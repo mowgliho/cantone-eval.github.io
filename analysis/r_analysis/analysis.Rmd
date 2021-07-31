@@ -1,0 +1,65 @@
+---
+title: "Analysis"
+output: "html_document"
+---
+
+# Analysis
+
+```{r echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
+data_dir <- '../results'
+
+library(tidyverse)
+library(magrittr)
+
+data <- lapply(list.files('../results/'), function(f) read_tsv(file.path(data_dir,f)))
+names(data) <- list.files(data_dir)
+```
+
+# Listening Training
+
+```{r echo=F}
+guesses <- inner_join(
+  data$listen_train_trial.tsv %>% select(id, round, tones, ref, same, injective, visual, vistype), 
+  data$listen_train_line.tsv %>% group_by(id,round,syl) %>% filter(row_number() == n()) %>% ungroup %>% select(id, round, guess, tone)
+)
+
+guesses %<>% mutate(correct = (guess == tone))
+
+# group by level/contour/all
+guesses %>% group_by(tones) %>% summarize(accuracy = sum(correct)/n(), n = n())
+
+# group by round condition
+guesses %>% group_by(ref,same,injective,visual,vistype) %>% summarize(accuracy = sum(correct)/n(), n = n())
+
+# which tone
+guesses %>% group_by(tone) %>% summarize(accuracy=sum(correct/n()))
+
+# confusion matrix
+guesses %>% group_by(guess,tone) %>% summarize(n = n()) %>% pivot_wider(id_cols=guess,names_from = tone,values_from = n)
+guesses %>% filter(!injective) %>% group_by(guess,tone) %>% summarize(n = n()) %>% pivot_wider(id_cols=guess,names_from = tone,values_from = n)
+
+
+```
+
+# Listening Test
+
+```{r echo=F}
+#get last guess per round
+guesses <- data$listen_test_click.tsv %>% 
+  filter(substr(type,1,1) == 't') %>% 
+  group_by(id,round) %>% 
+  filter(row_number() == n()) %>% 
+  ungroup
+
+#join with truth
+guesses %<>% select(id, round, guess = type) %>% inner_join(data$listen_test_round.tsv %>% select(id, round, syl), by = c('id','round'))
+
+#get answers
+guesses %<>% mutate(guess_tone = substr(guess,2,2), true_tone = substr(syl,nchar(syl),nchar(syl)))
+
+#add condition
+guesses %<>% inner_join(data$info.tsv %>% select(id, visual))
+
+#get accuracy
+guesses %>% mutate(right = guess_tone == true_tone) %>% group_by(visual) %>% summarize(n = n(), accuracy = sum(right)/n())
+```
