@@ -8,3 +8,4 @@
   + answers get saved every 10, so that when the reload it should be ok.
   + demo answers are not changed
 + run collate\_tsv to collate tsvs
++ run collate\_text to get feedback, questionnaire, prolific ids

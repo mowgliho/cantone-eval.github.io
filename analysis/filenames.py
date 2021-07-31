@@ -55,6 +55,10 @@ filenames = {
     'listen_train_play': {
       'filename': 'listen_train_play.tsv',
       'row_fn': helpers.clean_list_train_pass
+    },
+    'listen_train_trial': {
+      'filename': 'listen_train_trial.tsv',
+      'row_fn': helpers.clean_list_train_trial
     }
   }
 }

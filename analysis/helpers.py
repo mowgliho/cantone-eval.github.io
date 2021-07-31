@@ -24,3 +24,10 @@ def clean_list_train_pass(pid,row):
   ret.update({k if k != 'id' else 'round':v for k,v in row.items()})
   ret['tone'] = ret['syl'][-1]
   return ret
+
+def clean_list_train_trial(pid,row):
+  ret = {'id':pid}
+  ret.update({k if k != 'id' else 'round':v for k,v in row.items()})
+  for x in ['correct','end']:
+    ret[x] = int(ret[x]) - int(ret['start'])
+  return ret
