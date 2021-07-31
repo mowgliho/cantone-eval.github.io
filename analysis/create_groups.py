@@ -18,6 +18,18 @@ import pyloudnorm as pyln
 import audio2numpy
 import scipy.io.wavfile
 import numpy as np
+import warnings
+
+warnings.filterwarnings('error')
+
+def adjust(x, loudness, param):
+  try:
+    return pyln.normalize.loudness(x, loudness, param)
+  except Exception as e:
+    if str(e).strip() == 'Possible clipped samples in output.':
+      param -= 1
+      print(('\t reducing param to %s') % (param))
+      return adjust(x,loudness,param)
 
 LOUDNESS = -19
 DTYPE = np.int16
@@ -35,7 +47,7 @@ def copy_wav(output_dir, in_wav, out_wav):
   elif len(x.shape) ==2 and x.shape[1] == 2:
     x = x.sum(axis=1)/2
   loudness = pyln.Meter(sampleRate).integrated_loudness(x)
-  x = pyln.normalize.loudness(x, loudness, LOUDNESS)
+  x = adjust(x, loudness, LOUDNESS)
   scipy.io.wavfile.write(out_fn, sampleRate, (x*AMPLITUDE).astype(DTYPE))
 
 input_fn = sys.argv[1]
