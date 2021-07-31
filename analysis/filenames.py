@@ -36,62 +36,19 @@ filenames = {
     }
   },
   'tsv': {
-    'pcpt_canto': {
-      'filename': 'pcpt_canto.tsv',
-      'row_fn': helpers.clean_pcpt_row
-    },
-    'listen_test_click': {
-      'filename': 'listen_test_click.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'listen_test_round': {
-      'filename': 'listen_test_round.tsv',
-      'row_fn': helpers.clean_list_test_round_row
-    },
-    'listen_train_line': {
-      'filename': 'listen_train_line.tsv',
-      'row_fn': helpers.clean_list_train_pass
-    },
-    'listen_train_play': {
-      'filename': 'listen_train_play.tsv',
-      'row_fn': helpers.clean_list_train_pass
-    },
-    'listen_train_trial': {
-      'filename': 'listen_train_trial.tsv',
-      'row_fn': helpers.clean_list_train_trial
-    },
-    'mic_test_contour': {
-      'filename': 'mic_test_contour.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'mic_test_ref': {
-      'filename': 'mic_test_ref.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'prod_test_click': {
-      'filename': 'prod_test_click.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'prod_test_contour': {
-      'filename': 'prod_test_contour.tsv',
-      'row_fn': helpers.clean_prod_test_contour
-    },
-    'prod_test_round': {
-      'filename': 'prod_test_round.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'prod_train_click': {
-      'filename': 'prod_train_click.tsv',
-      'row_fn': helpers.pass_through
-    },
-    'prod_train_contour': {
-      'filename': 'prod_train_contour.tsv',
-      'row_fn': helpers.clean_prod_train_contour
-
-    },
-    'prod_train_round': {
-      'filename': 'prod_train_round.tsv',
-      'row_fn': helpers.pass_through
-    }
+    'pcpt_canto': helpers.clean_pcpt_row,
+    'listen_test_click': helpers.pass_through,
+    'listen_test_round':  helpers.clean_list_test_round_row,
+    'listen_train_line': helpers.clean_list_train_pass,
+    'listen_train_play': helpers.clean_list_train_pass,
+    'listen_train_trial': helpers.clean_list_train_trial,
+    'mic_test_contour': helpers.pass_through,
+    'mic_test_ref': helpers.pass_through,
+    'prod_test_click': helpers.pass_through,
+    'prod_test_contour': helpers.clean_prod_test_contour,
+    'prod_test_round': helpers.pass_through,
+    'prod_train_click': helpers.pass_through,
+    'prod_train_contour': helpers.clean_prod_train_contour,
+    'prod_train_round': helpers.pass_through
   }
 }

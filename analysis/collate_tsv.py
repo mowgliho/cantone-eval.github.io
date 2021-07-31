@@ -16,20 +16,21 @@ with open(info_fn,'r') as f:
   reader = csv.DictReader(f, dialect = csv.excel_tab)
   pids = [row['id'] for row in reader]
 
-for key, info in filenames['tsv'].items():
+for key, func in filenames['tsv'].items():
   print(key)
+  fn = key + '.tsv'
   data = []
   for pid in pids:
-    fn = os.path.join(data_dir, pid, info['filename'])
-    if not os.path.exists(fn):
+    fd = os.path.join(data_dir, pid, fn)
+    if not os.path.exists(fd):
       if pid not in missing:
         missing[pid] = []
-      missing[pid].append(info['filename'])
+      missing[pid].append(fn)
       continue
-    with open(os.path.join(data_dir, pid, info['filename']),'r') as f:
+    with open(fd,'r') as f:
       reader = csv.DictReader(f, dialect=csv.excel_tab)
       for row in reader:
-        data += info['row_fn'](pid, row)
+        data += func(pid, row)
 
   if len(data) > 0:
     with open(os.path.join(out_dir, key + '.tsv'),'w') as f:
