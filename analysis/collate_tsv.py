@@ -29,7 +29,7 @@ for key, info in filenames['tsv'].items():
     with open(os.path.join(data_dir, pid, info['filename']),'r') as f:
       reader = csv.DictReader(f, dialect=csv.excel_tab)
       for row in reader:
-        data.append(info['row_fn'](pid, row))
+        data += info['row_fn'](pid, row)
 
   if len(data) > 0:
     with open(os.path.join(out_dir, key + '.tsv'),'w') as f:
@@ -38,4 +38,4 @@ for key, info in filenames['tsv'].items():
       for row in data:
         writer.writerow(row)
 
-print(missing)
+print('\nMissing: ', missing)
