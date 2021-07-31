@@ -47,6 +47,10 @@ filenames = {
     'listen_test_round': {
       'filename': 'listen_test_round.tsv',
       'row_fn': helpers.clean_list_test_round_row
+    },
+    'listen_train_line': {
+      'filename': 'listen_train_line.tsv',
+      'row_fn': helpers.clean_list_train_line
     }
   }
 }
