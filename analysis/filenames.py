@@ -75,6 +75,10 @@ filenames = {
     'prod_test_contour': {
       'filename': 'prod_test_contour.tsv',
       'row_fn': helpers.clean_prod_test_contour
+    },
+    'prod_test_round': {
+      'filename': 'prod_test_round.tsv',
+      'row_fn': helpers.pass_through
     }
   }
 }
