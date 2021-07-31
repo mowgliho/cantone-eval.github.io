@@ -79,6 +79,10 @@ filenames = {
     'prod_test_round': {
       'filename': 'prod_test_round.tsv',
       'row_fn': helpers.pass_through
+    },
+    'prod_train_click': {
+      'filename': 'prod_train_click.tsv',
+      'row_fn': helpers.pass_through
     }
   }
 }
