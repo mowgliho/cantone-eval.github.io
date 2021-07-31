@@ -88,6 +88,10 @@ filenames = {
       'filename': 'prod_train_contour.tsv',
       'row_fn': helpers.clean_prod_train_contour
 
+    },
+    'prod_train_round': {
+      'filename': 'prod_train_round.tsv',
+      'row_fn': helpers.pass_through
     }
   }
 }
