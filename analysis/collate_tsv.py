@@ -20,8 +20,11 @@ for key, info in filenames['tsv'].items():
   for pid in pids:
     with open(os.path.join(data_dir, pid, info['filename']),'r') as f:
       reader = csv.DictReader(f, dialect=csv.excel_tab)
-      for row in reader:
-        data.append(info['row_fn'](pid, row))
+      if 'row_fn' in info:
+        for row in reader:
+          data.append(info['row_fn'](pid, row))
+      if 'rows_fn' in info:
+        data += info['rows_fn']([row for row in reader])
 
   if len(data) > 0:
     with open(os.path.join(out_dir, key + '.tsv'),'w') as f:
