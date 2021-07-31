@@ -67,7 +67,10 @@ filenames = {
     'mic_test_ref': {
       'filename': 'mic_test_ref.tsv',
       'row_fn': helpers.pass_through
+    },
+    'prod_test_click': {
+      'filename': 'prod_test_click.tsv',
+      'row_fn': helpers.pass_through
     }
-
   }
 }
