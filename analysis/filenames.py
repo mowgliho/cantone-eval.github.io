@@ -63,6 +63,11 @@ filenames = {
     'mic_test_contour': {
       'filename': 'mic_test_contour.tsv',
       'row_fn': helpers.pass_through
+    },
+    'mic_test_ref': {
+      'filename': 'mic_test_ref.tsv',
+      'row_fn': helpers.pass_through
     }
+
   }
 }
