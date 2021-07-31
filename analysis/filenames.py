@@ -59,6 +59,10 @@ filenames = {
     'listen_train_trial': {
       'filename': 'listen_train_trial.tsv',
       'row_fn': helpers.clean_list_train_trial
+    },
+    'mic_test_contour': {
+      'filename': 'mic_test_contour.tsv',
+      'row_fn': helpers.pass_through
     }
   }
 }
