@@ -19,7 +19,7 @@ def pass_through(pid, row):
   ret.update(row)
   return ret
 
-def clean_list_train_line(pid,row):
+def clean_list_train_pass(pid,row):
   ret = {'id':pid}
   ret.update({k if k != 'id' else 'round':v for k,v in row.items()})
   ret['tone'] = ret['syl'][-1]
