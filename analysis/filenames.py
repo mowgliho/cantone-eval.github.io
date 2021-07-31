@@ -6,6 +6,18 @@ def clean_pcpt_row(pid, row):
   tone = syl[-1]
   return { 'id': pid, 'round': row['round'], 'syl': syl, 'seg': seg, 'tone': tone, 'guess': row['guessed_tone']}
 
+def clean_list_test_round_row(pid, row):
+  ret = {'id':pid}
+  ret.update(row)
+  ret['duration'] = int(ret['end']) - int(ret['start'])
+  del ret['end']
+  return ret
+
+def pass_through(pid, row):
+  ret = {'id':pid}
+  ret.update(row)
+  return ret
+
 
 filenames = {
   'info': 'info.txt',
@@ -44,6 +56,14 @@ filenames = {
     'pcpt_canto': {
       'filename': 'pcpt_canto.tsv',
       'row_fn': clean_pcpt_row
+    },
+    'listen_test_click': {
+      'filename': 'listen_test_click.tsv',
+      'row_fn': pass_through
+    },
+    'listen_test_round': {
+      'filename': 'listen_test_round.tsv',
+      'row_fn': clean_list_test_round_row
     }
   }
 }
