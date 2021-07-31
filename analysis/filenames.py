@@ -83,6 +83,11 @@ filenames = {
     'prod_train_click': {
       'filename': 'prod_train_click.tsv',
       'row_fn': helpers.pass_through
+    },
+    'prod_train_contour': {
+      'filename': 'prod_train_contour.tsv',
+      'row_fn': helpers.clean_prod_train_contour
+
     }
   }
 }

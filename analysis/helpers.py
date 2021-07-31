@@ -34,3 +34,7 @@ def clean_list_train_trial(pid,row):
 
 def clean_prod_test_contour(pid, row):
   return [{'id': pid, 'round': row['round'], 'attempt': row['attempt'], 'st': st, 'idx': i} for i, st in enumerate(row['contour'].strip().split(','))]
+
+def clean_prod_train_contour(pid,row):
+  contour = [x for x in row['contour'].strip().split(',') if x != 'NaN' and x != '']
+  return [{'id': pid, 'round': row['round'], 'type': row['type'], 'attempt': row['attempt'], 'target': row['target'], 'st': x, 'idx': i} for i, x in enumerate(contour)]
