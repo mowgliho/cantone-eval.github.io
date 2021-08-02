@@ -29,6 +29,8 @@ rows = [{'id': r, 'speaker': pid} for r in raters for pid in shared]
 for i, pid in enumerate(pids):
   rows.append({'id': raters[i % len(raters)], 'speaker':pid})
 
+random.shuffle(rows)
+
 with open(output_fn, 'w') as f:
   writer = csv.DictWriter(f,fieldnames = rows[0].keys(), dialect = csv.excel_tab)
   writer.writeheader()
