@@ -48,7 +48,10 @@ def copy_wav(output_dir, in_wav, out_wav):
     x = x.sum(axis=1)/2
   loudness = pyln.Meter(sampleRate).integrated_loudness(x)
   x = adjust(x, loudness, LOUDNESS)
-  scipy.io.wavfile.write(out_fn, sampleRate, (x*AMPLITUDE).astype(DTYPE))
+  try:
+    scipy.io.wavfile.write(out_fn, sampleRate, (x*AMPLITUDE).astype(DTYPE))
+  except Exception as e:
+    print('ERROR', in_wav, out_fn)
 
 input_fn = sys.argv[1]
 output_dir = sys.argv[2]
@@ -116,6 +119,8 @@ for x, speakers in ids.items():
       rows = [row for row in data[speaker] if row['seg'] == seg]
       random.shuffle(rows)
       for row in rows:
+        if 'out_wav' not in row:#somehow happened...
+          continue
         group_data[x].append({
           'seg': row['seg'], 
           'syl': row['syl'],
