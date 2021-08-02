@@ -3,8 +3,6 @@ title: "Analysis"
 output: "html_document"
 ---
 
-# Analysis
-
 ```{r echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
 data_dir <- '../results'
 
@@ -12,59 +10,191 @@ library(tidyverse)
 library(magrittr)
 
 data <- lapply(list.files('../results/'), function(f) read_tsv(file.path(data_dir,f)))
-names(data) <- list.files(data_dir)
+names(data) <- list.files(data_dir) %>% sapply(function(s) substr(s,0,nchar(s) - 4))
 ```
+# Consent
 
-# Overall
+Nothing to report
+
+# Progress
+
+Median time: more time spent on listen train all (6x6 instead of 12x3), more time on level than contour, but this can be due to level being first. median of 68 minutes on the test
 
 ```{r echo=F}
-data$info.tsv %>% group_by(visual,audio) %>% summarize(n=n())
+data$progress %>% group_by(task, subtask) %>% summarize(time = median(min))
+```
+
+By visual, audio condition
+
+```{r echo=F}
+inner_join(data$progress, data$info %>% select(audio, id), by = 'id') %>% group_by(task, subtask, audio) %>% summarize(time = median(min)) %>% pivot_wider(id_cols = c(task, subtask), names_from = audio, values_from = time)
+inner_join(data$progress, data$info %>% select(visual, id), by = 'id') %>% group_by(task, subtask, visual) %>% summarize(time = median(min)) %>% pivot_wider(id_cols = c(task, subtask), names_from = visual, values_from = time)
+```
+
+Audio: should only make a difference after prod test: about 6 minutes of waiting to vocode audio, 1.5 more minutes for feedback
+Visual: doesn't seem to affect time that much either, which is also nice
+
+# Intro
+
+Groups
+
+```{r echo=F}
+data$info %>% group_by(visual,audio) %>% summarize(n=n())
+```
+
+Don't log gender, but we can look at mean vocal range
+
+```{r echo=F}
+data$info %>% ggplot(aes(x=st)) + geom_density()
+```
+
+# Questionnaire
+
+TODO
+
+# PCPT Canto
+
+```{r echo=F}
+#group by round
+data$pcpt_canto %>% mutate(correct = (tone == guess)) %>% group_by(round) %>% summarize(accuracy = sum(correct)/n(), n = n())
+#group by tone
+data$pcpt_canto %>% mutate(correct = (tone == guess)) %>% group_by(tone) %>% summarize(accuracy = sum(correct)/n(), n = n())
+#confusion matrix
+table(data$pcpt_canto$tone, data$pcpt_canto$guess %>% sapply(function(s) paste0('g',s)))
+#group by seg
+data$pcpt_canto %>% mutate(correct = (tone == guess)) %>% group_by(seg) %>% summarize(accuracy = sum(correct)/n(), n = n())
+#pcpt accuracy by id
+pcpt_accuracy <- data$pcpt_canto %>% mutate(correct = (tone == guess)) %>% group_by(id) %>% summarize(accuracy = sum(correct)/n())
+pcpt_accuracy %>% ggplot(aes(x=accuracy)) + geom_histogram()
+```
+
+do quite well on the first rounds (i.e. matching stimuli to stimuli), much worse on later rounds (where non-injective, diff sounds, etc), but still much better than chance.
+
+better on tones 1 and 4, confuse 3 and 6 and 2 and 5
+
+good on (si) because seg match. Better on jyu than haam, interestingly
+
+TODO compare PCPT to performance later (not enough data points?)
+
+# Mic Test
+
+Nothng much to report
+
+```{r echo=F}
+#table joining if want to do future stuff
+inner_join(data$mic_test_contour %>% rename(attempt_st = st), data$mic_test_ref, by=c('id', 'round')) %>% group_by(id, round) %>% filter(lag(attempt_st) != attempt_st) %>% mutate(time = max(time) - time) %>% ungroup
 ```
 # Listening Training
+(divide by number of rounds to get add plays/plays per round)
+
+ref tone is played more for level tones than others, but can be due to reference tones being first. Tone 3 is played more.
+
+Play: among level tones, tone 1 is heard less often than 3 and 6. Among contour, 2 is less than 4 and 5. We can divide by what tones are shown, and see that it's especially pronounced for tone 4. People listen a lot more if in the none condition. In fact, listen the least in "data"
+
+some segmentals are played more than others; reference is played least
+
+when the rounds get harder, add plays go up for the first round and then back down. In addition, with all 6 we have much more plays, than just x2.
+
+duration per round goes down pretty constantly, unclear who spends longer doing what
+
+holding round setting constant, decrease in round duration and play counts does not correlate to lower accuracy, so they are learning.
+
+higher accuracy on level, much higher accuracy when not all 6.
+
+tone 1 and 4 are the easiest. 6 also gets confused with 4.
+
+In training, data is better than idealized is better than none.
+
+interesting stuff looking at which tones get confused or lines replaced with which
 
 ```{r echo=F}
+#how often reference tone is played
+inner_join(data$listen_train_trial %>% select(id, round, tones), data$listen_train_play) %>% filter(type == 'target') %>% group_by(tones, tone) %>% summarize(n = n())
+#play
+data$listen_train_play %>% group_by(tone) %>% summarize(n = n())
+play_data <- inner_join(data$listen_train_trial %>% select(id, round, vistype, tones), data$listen_train_play %>% filter(type == 'source'), by = c('id','round'))
+add_play_data <- play_data %>% group_by(id,round,tone) %>% filter(row_number() > 1) %>% ungroup
+#by tone
+add_play_data %>% group_by(tone) %>% summarize(n=n())
+#by tone set and tone
+add_play_data %>% group_by(tones, tone) %>% summarize(n = n())
+#by vistype and toneset
+add_play_data %>% group_by(id,vistype) %>% summarize(n = n()) %>% group_by(vistype) %>% summarize(n = median(n))
+#by segmental
+add_play_data %>% mutate(seg = substr(syl,0,nchar(syl)-1)) %>% group_by(seg) %>% summarize(n = n())
+#by round
+data$listen_train_play %>% filter(type == 'source') %>% group_by(id, round, tone) %>% filter(row_number() > 1) %>% ungroup %>% group_by(round) %>% summarize(n = n()) %>% inner_join(data$listen_train_trial %>% select(round,tones,ref,same,injective) %>% distinct) %>% as.data.frame
+
+#round duration
+data$listen_train_trial %>% mutate(end = end-correct) %>% group_by(round) %>% summarize(correct = median(correct)/1000, end = median(end)/1000) %>% as.data.frame
+#by vistype
+listen_trial_duration <- data$listen_train_trial %>% group_by(vistype,round) %>% summarize(correct=median(correct), end = median(end))
+listen_trial_duration %<>% mutate(correct = correct/1000, end = (end -correct)/1000)
+listen_trial_duration %>% select(vistype, round, correct) %>% pivot_wider(names_from = vistype, values_from = correct) %>% as.data.frame
+
 guesses <- inner_join(
-  data$listen_train_trial.tsv %>% select(id, round, tones, ref, same, injective, visual, vistype), 
-  data$listen_train_line.tsv %>% group_by(id,round,syl) %>% filter(row_number() == n()) %>% ungroup %>% select(id, round, guess, tone)
+  data$listen_train_trial %>% select(id, round, tones, ref, same, injective, visual, vistype), 
+  data$listen_train_line %>% group_by(id,round,syl) %>% filter(row_number() == n()) %>% ungroup %>% select(id, round, guess, tone)
 )
 
-guesses %<>% mutate(correct = (guess == tone))
-
+guesses %<>% mutate(correct = (guess == tone)) %>% mutate(guess = paste0('g',guess), tone=paste0('t',tone))
+#by round
+guesses %>% group_by(round, ref, same, injective) %>% summarize(accuracy = sum(correct)/n()) %>% as.data.frame
 # group by level/contour/all
 guesses %>% group_by(tones) %>% summarize(accuracy = sum(correct)/n(), n = n())
-
-# group by round condition
-guesses %>% group_by(ref,same,injective,visual,vistype) %>% summarize(accuracy = sum(correct)/n(), n = n())
 
 # which tone
 guesses %>% group_by(tone) %>% summarize(accuracy=sum(correct/n()))
 
 # confusion matrix
-guesses %>% group_by(guess,tone) %>% summarize(n = n()) %>% pivot_wider(id_cols=guess,names_from = tone,values_from = n)
-guesses %>% filter(!injective) %>% group_by(guess,tone) %>% summarize(n = n()) %>% pivot_wider(id_cols=guess,names_from = tone,values_from = n)
+table(guesses$guess, guesses$tone)
+#confusion matrix for tone sets
+guesses %>% filter(tones == 'level') %>% {table(.$guess, .$tone)}
+guesses %>% filter(tones == 'contour') %>% {table(.$guess, .$tone)}
+guesses %>% filter(tones == 'all') %>% {table(.$guess, .$tone)}
 
+#guess w.r.t vistype
+guesses %>% group_by(vistype, tones) %>% summarize(accuracy = sum(correct)/n())
+#guesses w.r.t. vistype, but only rounds with no visual aid
+guesses %>% filter(round %in% c(10,11,22,23,29)) %>% group_by(vistype, tones) %>% summarize(accuracy = sum(correct)/n(), n = length(unique(id)))
 
+#line confusion data 
+line_confusion_data <- data$listen_train_line %>% group_by(id,round,startIdx) %>% filter(n() > 1) %>% select(id,round,startIdx,guess) %>% distinct %>% mutate(count = T,guess = paste0('g',guess)) %>% pivot_wider(id_cols=c(id,round,startIdx),names_from=guess, values_from = count) %>% ungroup %>% inner_join(data$listen_train_trial %>% select(id,round,tones))
+tones <- c('g1','g2','g3','g4','g5','g6')
+# which are confused with which
+for(toneset in c('level','contour','all')) {
+print(toneset)
+for(t1 in tones) { for(t2 in tones) { if(t1 != t2) {print(paste(t1,t2,line_confusion_data %>% filter(tones = toneset) %>% filter_(t1,t2) %>% nrow))}}}
+}
 ```
 
 # Listening Test
 
 ```{r echo=F}
 #get last guess per round
-guesses <- data$listen_test_click.tsv %>% 
+guesses <- data$listen_test_click %>% 
   filter(substr(type,1,1) == 't') %>% 
   group_by(id,round) %>% 
   filter(row_number() == n()) %>% 
   ungroup
 
 #join with truth
-guesses %<>% select(id, round, guess = type) %>% inner_join(data$listen_test_round.tsv %>% select(id, round, syl), by = c('id','round'))
+guesses %<>% select(id, round, guess = type) %>% inner_join(data$listen_test_round %>% select(id, round, syl), by = c('id','round'))
 
 #get answers
 guesses %<>% mutate(guess_tone = substr(guess,2,2), true_tone = substr(syl,nchar(syl),nchar(syl)))
 
 #add condition
-guesses %<>% inner_join(data$info.tsv %>% select(id, visual))
+guesses %<>% inner_join(data$info %>% select(id, visual))
 
 #get accuracy
 guesses %>% mutate(right = guess_tone == true_tone) %>% group_by(visual) %>% summarize(n = n(), accuracy = sum(right)/n())
 ```
+
+# Production Training
+
+# Production Test
+
+# Feedback
+
+TODO
