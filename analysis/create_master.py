@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+#python create_master.py ../check.tsv evaluations/master.tsv
 import random
 import sys
 import os
