@@ -40,6 +40,8 @@ class Manager {
   buildTestDiv(doc, parentDiv) {
     const that = this;
 
+    this.allButtons = [];
+
     let div = doc.create('div',null,parentDiv);
     div.style.width = '400px';
     div.style.margin = 'auto';
@@ -49,6 +51,7 @@ class Manager {
     let playButton = doc.create('button','Play', testDiv);
     playButton.style.width = '100%';
     playButton.onclick = function() { that.play() };
+    this.allButtons.push(playButton);
 
     doc.create('p',null,testDiv);
     let buttonDiv = doc.create('div',null,testDiv);
@@ -57,15 +60,18 @@ class Manager {
       this.toneButtons[tone] = doc.create('button',null,buttonDiv);
       this.toneButtons[tone].style.width = '14.28%'
       this.toneButtons[tone].onclick = function() { that.select(tone)};
+      this.allButtons.push(this.toneButtons[tone]);
     }
     doc.create('p',null,testDiv);
 
     let backButton = doc.create('button','Previous Stimuli',testDiv);
     backButton.style.width = '50%';
     backButton.onclick = function() { that.back() };
+    this.allButtons.push(backButton);
     this.forwardButton = doc.create('button','Next Stimuli', testDiv);
     this.forwardButton.style.width = '50%';
     this.forwardButton.onclick = function() { that.forward() };
+    this.allButtons.push(this.forwardButton);
 
     this.savedAnswers = doc.create('p', 'Answers saved!', div);
 
@@ -173,6 +179,9 @@ class Manager {
   uploadAnswers() {
     const that = this;
 
+    const buttonStates = this.allButtons.map((a) => a.disabled);
+    for(const button of this.allButtons) button.disabled = true;
+
     let fd = new FormData();
     fd.append('id',this.id);
     fd.append('data',JSON.stringify(this.answers));
@@ -181,6 +190,7 @@ class Manager {
       console.log(x);
       that.recentlySaved = 2;
       that.answers = [];
+      for(const [i,state] of buttonStates.entries()) that.allButtons[i].disabled = state;
       that.startNextRound();
     })
   }
