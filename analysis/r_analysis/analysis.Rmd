@@ -31,7 +31,7 @@ inner_join(data$progress, data$info %>% select(audio, id), by = 'id') %>% group_
 inner_join(data$progress, data$info %>% select(visual, id), by = 'id') %>% group_by(task, subtask, visual) %>% summarize(time = median(min)) %>% pivot_wider(id_cols = c(task, subtask), names_from = visual, values_from = time)
 ```
 
-Audio: should only make a difference after prod test: about 6 minutes of waiting to vocode audio, 1.5 more minutes for feedback
+Audio: should only make a difference after prod test: about 5 minutes of waiting to vocode audio, 2.5 more minutes for feedback
 Visual: doesn't seem to affect time that much either, which is also nice
 
 # Intro
@@ -42,7 +42,7 @@ Groups
 data$info %>% group_by(visual,audio) %>% summarize(n=n())
 ```
 
-Don't log gender, but we can look at mean vocal range
+Don't log gender, but we can look at mean vocal range: a bit more females, but not too bad
 
 ```{r echo=F}
 data$info %>% ggplot(aes(x=st)) + geom_density()
@@ -70,7 +70,7 @@ pcpt_accuracy %>% ggplot(aes(x=accuracy)) + geom_histogram()
 
 do quite well on the first rounds (i.e. matching stimuli to stimuli), much worse on later rounds (where non-injective, diff sounds, etc), but still much better than chance.
 
-better on tones 1 and 4, confuse 3 and 6 and 2 and 5
+better on tones 1 and 4, confuse 3 and 6 and 2 and 5. Confusion of 1 with 6, for example, is less than 1 with 3
 
 good on (si) because seg match. Better on jyu than haam, interestingly
 
@@ -170,6 +170,29 @@ for(t1 in tones) { for(t2 in tones) { if(t1 != t2) {print(paste(t1,t2,line_confu
 
 # Listening Test
 
+not much correlation between pcpt test and listen test accuracy. People are doing better than chance (stat test, look at per condition etc)
+
+better on t1 than all others, t4 is surprisingly bad. slightly better on level tones than contour tones
+
+look at patterns in confusion matrix
+
+best on reference stimuli, slightly better on voiced vs unvoiced. Interestingly, better on generalizing than on non-generalizing. We should investigate in the future by swapping which are trained on.
+
+people tend to guess t3 (stimuli are uniformly distributed)
+
+get slightly better over rounds (perhaps a training effect?)
+
+accuracy tends to decrease over the rounds of seeing a segmental
+
+duration goes down over rounds, but goes up a bit for new segmental, faster on tones 1 and 4. slightly faster on non-gen stimuli
+add play goes down over rounds, more for tones 3 and 6
+
+vistype: none is worst in terms of median and mean accuracy, but have to test this statistically (lots of noise, not significant). Data is also better w.r.t mean, less so with mean. data takes a bit longer, but unclear
+
+can probably see confusion by tone in clicks, but effort.
+
+going by round also doesn't help
+
 ```{r echo=F}
 #get last guess per round
 guesses <- data$listen_test_click %>% 
@@ -187,8 +210,66 @@ guesses %<>% mutate(guess_tone = substr(guess,2,2), true_tone = substr(syl,nchar
 #add condition
 guesses %<>% inner_join(data$info %>% select(id, visual))
 
+#w.r.t pcpt
+pcpt_listen <- inner_join(
+  data$pcpt_canto %>% mutate(correct = (tone == guess)) %>% group_by(id) %>% summarize(pcpt_accuracy = sum(correct)/n()), 
+  guesses %>% group_by(id) %>% summarize(test_accuracy = sum(guess_tone == true_tone)/n())
+)
+cor(pcpt_listen$pcpt_accuracy, pcpt_listen$test_accuracy)
+
+#add correct column, easier labeling for confusion matrices, add segmental
+guesses %<>% mutate(correct = (guess_tone == true_tone))
+guesses %<>% mutate(gt = paste0('g',guess_tone), tt = paste0('t',true_tone))
+guesses %<>% mutate(seg = substr(syl,0,nchar(syl) -1))
+
 #get accuracy
-guesses %>% mutate(right = guess_tone == true_tone) %>% group_by(visual) %>% summarize(n = n(), accuracy = sum(right)/n())
+#histogram
+guesses %>% group_by(id) %>% summarize(accuracy = sum(correct)/n()) %>% ggplot(aes(x=accuracy)) + geom_histogram()
+
+# accuracy by tone
+guesses %>% group_by(true_tone) %>% summarize(accuracy = sum(correct)/n())
+
+#confusion matrix
+guesses %<>% mutate(gt = paste0('g',guess_tone), tt = paste0('t',true_tone))
+
+#by stimuli
+guesses %>% group_by(seg) %>% summarize(accuracy = sum(correct)/n())
+
+#by guess
+table(guesses$gt)
+
+#accuracy by round
+ac_by_round <- guesses %>% group_by(round) %>% summarize(accuracy = sum(correct)/n())
+cor(ac_by_round$round, ac_by_round$accuracy)
+ac_by_round %>% mutate(group = round %% 6) %>% group_by(group) %>% summarize(accuracy = mean(accuracy))
+
+#duration by round
+data$listen_test_round %>% group_by(round) %>% summarize(duration = median(duration)) %>% ggplot(aes(x=round,y=duration)) + geom_point()
+#duration by tone
+data$listen_test_round %>% mutate(tone = substr(syl,nchar(syl),nchar(syl))) %>% group_by(tone) %>% summarize(duration = median(duration))
+#duration by seg
+data$listen_test_round %>% mutate(seg = substr(syl,0,nchar(syl)-1)) %>% group_by(seg) %>% summarize(duration = median(duration))
+
+#additional play
+add_play <- data$listen_test_click %>% filter(type == 'play') %>% group_by(id,round) %>% filter(row_number() > 1) %>% ungroup
+add_play %>% group_by(round) %>% summarize(n = n()) %>% ggplot(aes(x=round,y=n/51)) + geom_point()
+inner_join(add_play %>% group_by(id,round) %>% summarize (n=n()),guesses) %>% group_by(tt) %>% summarize(n = sum(n))
+
+#by vistype
+guesses %>% group_by(id,visual) %>% summarize(n = n(), accuracy = sum(correct)/n()) %>% group_by(visual) %>% summarize(median_accuracy = median(accuracy),mean_accuracy = mean(accuracy))
+#duration
+data$listen_test_round %>% group_by(id) %>% summarize(duration = median(duration)) %>% inner_join(data$info %>% select(id,visual)) %>% group_by(visual) %>% summarize(duration = mean(duration))
+
+t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
+t.test(accuracy %>% filter(visual == 'data') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
+t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'data') %>% pull(accuracy))
+
+accuracy <- guesses %>% group_by(id, seg) %>% summarize(accuracy = sum(correct)/n(), visual = first(visual))
+t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
+t.test(accuracy %>% filter(visual == 'data') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
+t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'data') %>% pull(accuracy))
+
+
 ```
 
 # Production Training
