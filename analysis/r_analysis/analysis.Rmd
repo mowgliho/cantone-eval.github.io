@@ -5,12 +5,20 @@ output: "html_document"
 
 ```{r echo=FALSE, results=FALSE, message=FALSE, warning=FALSE}
 data_dir <- '../results'
+eval_dir <- '../evaluations'
+
+raters <- c('samuel','nh','gemma','yuchen','vchow','twc','wahpo')
+raters <- c('nh','gemma','yuchen','vchow')
 
 library(tidyverse)
 library(magrittr)
+library(irr)
 
 data <- lapply(list.files('../results/'), function(f) read_tsv(file.path(data_dir,f)))
 names(data) <- list.files(data_dir) %>% sapply(function(s) substr(s,0,nchar(s) - 4))
+
+eval_data <- bind_rows(lapply(raters, function(x) read_tsv(file.path(eval_dir,paste0(x,'_clean_answers.tsv'))) %>% mutate(rater = x)))
+brent_eval <- read_tsv(file.path(eval_dir,'brent_clean_answers.tsv'))
 ```
 # Consent
 
@@ -164,7 +172,7 @@ tones <- c('g1','g2','g3','g4','g5','g6')
 # which are confused with which
 for(toneset in c('level','contour','all')) {
 print(toneset)
-for(t1 in tones) { for(t2 in tones) { if(t1 != t2) {print(paste(t1,t2,line_confusion_data %>% filter(tones = toneset) %>% filter_(t1,t2) %>% nrow))}}}
+for(t1 in tones) { for(t2 in tones) { if(t1 != t2) {print(paste(t1,t2,line_confusion_data %>% filter(tones == toneset) %>% filter_(t1,t2) %>% nrow))}}}
 }
 ```
 
@@ -260,6 +268,7 @@ guesses %>% group_by(id,visual) %>% summarize(n = n(), accuracy = sum(correct)/n
 #duration
 data$listen_test_round %>% group_by(id) %>% summarize(duration = median(duration)) %>% inner_join(data$info %>% select(id,visual)) %>% group_by(visual) %>% summarize(duration = mean(duration))
 
+accuracy <- guesses %>% group_by(id,visual) %>% summarize(accuracy = sum(correct)/n())
 t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
 t.test(accuracy %>% filter(visual == 'data') %>% pull(accuracy), accuracy %>% filter(visual == 'idealized') %>% pull(accuracy))
 t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% filter(visual == 'data') %>% pull(accuracy))
@@ -276,6 +285,65 @@ t.test(accuracy %>% filter(visual == 'none') %>% pull(accuracy), accuracy %>% fi
 
 # Production Test
 
+Look at raters:
+  tend to pick certain tones more than others
+  look at frequency: join with Cifu (Spoken Adult per million tokens)
+    difficult because of spoken canto vs written canto etc.
+performance on ref: pretty good, but gemma is 0.552
+fleiss kappa: fair agreement, much better without gemma
+where raters disagree with ref: confusion matrix
+  3 confused with 1, 5 confused with 2, 6 confused with 3
+where raters disagree with each other: confusion matrix
+  presumably similar stuff
+
+common mistakes by participants
+  on shared
+  on unshared
+  surprisingly bad on t4
+  very good on t1
+  relate to disagreement by raters on ref data
+  t5 marked as t2
+
+```{r echo=F}
+shared <- inner_join(eval_data, eval_data %>% group_by(speaker, round) %>% summarize(n=n()) %>% filter(n > 1) %>% select(-n))
+unshared <- inner_join(eval_data, eval_data %>% group_by(speaker, round) %>% summarize(n=n()) %>% filter(n == 1) %>% select(-n))
+
+#distribution of guesses
+table(unshared$rate_tone)
+table(unshared$tone)
+
+#lm comparison
+chars <- read_tsv('chars.tsv')
+lm_data <- unshared %>% group_by(seg, rate_tone) %>% summarize(n=n()) %>% inner_join(chars %>% rename(rate_tone = tone))
+
+#accuracy on ref
+shared %>% filter(speaker=='ref',!is.na(rate_tone)) %>% group_by(rater) %>% summarize(accuracy = sum(tone == rate_tone)/n(),n=n())
+
+#agreement
+fleiss_data <- shared %>% select(speaker,seg,tone, fn, rate_tone, rater) %>% pivot_wider(id_cols=c(speaker,seg,tone,fn),names_from=rater,values_from=rate_tone)
+#fleiss kappa
+fleiss_data %>% select(-speaker,-seg,-tone,-fn) %>% kappam.fleiss
+fleiss_data %>% filter(speaker == 'ref') %>% select(-speaker,-seg,-tone,-fn) %>% kappam.fleiss
+fleiss_data %>% filter(speaker != 'ref') %>% select(-speaker,-seg,-tone,-fn) %>% kappam.fleiss
+
+#confusion matrix on ref
+shared %>% filter(speaker == 'ref') %>% group_by(tone,rate_tone) %>% summarize(n=n())
+
+#common mistakes on shared
+shared %>% filter(speaker != 'ref') %>% select(tone,rate_tone) %>% pivot_wider(id_cols=tone,names_from=rate_tone,values_from=rate_tone,values_fn=list(rate_tone=length)) %>% select(tone,"1","2","3","4","5","6","NA") %>% arrange(tone)
+unshared %>% filter(speaker != 'ref') %>% select(tone,rate_tone) %>% pivot_wider(id_cols=tone,names_from=rate_tone,values_from=rate_tone,values_fn=list(rate_tone=length)) %>% select(tone,"1","2","3","4","5","6","NA") %>% arrange(tone)
+
+
+cor_data <- unshared %>% inner_join(data$info %>% rename(speaker=id)) %>% mutate(correct = ifelse(is.na(rate_tone),F,tone == rate_tone))
+#don't discard na
+cor_data %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
+#discard na
+cor_data %>% filter(!is.na(rate_tone)) %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
+
+brent_data <- brent_eval %>% inner_join(data$info %>% rename(speaker=id)) %>% mutate(correct = ifelse(is.na(rate_tone),F,tone == rate_tone))
+brent_data %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
+brent_data %>% filter(!is.na(rate_tone)) %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
+```
 # Feedback
 
 TODO
