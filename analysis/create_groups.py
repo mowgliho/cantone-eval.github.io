@@ -19,6 +19,7 @@ import audio2numpy
 import scipy.io.wavfile
 import numpy as np
 import warnings
+import functools
 
 warnings.filterwarnings('error')
 
@@ -130,6 +131,14 @@ for x, speakers in ids.items():
           'speaker': speaker
         })
         copy_wav(output_dir, row['in_wav'], row['out_wav'])
+
+all_rows = [json.loads(x) for x in set([json.dumps(x) for x in functools.reduce(lambda a,b: a + b,group_data.values(), [])])]
+
+with open(os.path.join(group_dir, 'reference.tsv'),'w') as f:
+  writer = csv.DictWriter(f, dialect = csv.excel_tab, fieldnames = all_rows[0].keys())
+  writer.writeheader()
+  for row in all_rows:
+    writer.writerow(row)
 
 # write tsvs for each id
 for x, rows in group_data.items():
