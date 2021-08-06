@@ -7,8 +7,7 @@ output: "html_document"
 data_dir <- '../results'
 eval_dir <- '../evaluations'
 
-raters <- c('samuel','nh','gemma','yuchen','vchow','twc','wahpo')
-raters <- c('nh','gemma','yuchen','vchow')
+raters <- c('samuel','nh','gemma','yuchen','vchow','twc','walter','betty','vchow2')
 
 library(tidyverse)
 library(magrittr)
@@ -304,6 +303,16 @@ common mistakes by participants
   relate to disagreement by raters on ref data
   t5 marked as t2
 
+Raters often disagree with each other
+  Gemma as an exception on reference
+  compare vchow to vchow2 on shared (i.e. consistency with oneself)
+  compare betty to walter: i.e. cohens kappa on 240
+  compare vchow2 to gemma (see if disagree more than betty/walter)
+
+Given significant disagreement, also look at brent
+  exemplar and vocoded are significantly different on speaker means!
+  do analysis with anova
+
 ```{r echo=F}
 shared <- inner_join(eval_data, eval_data %>% group_by(speaker, round) %>% summarize(n=n()) %>% filter(n > 1) %>% select(-n))
 unshared <- inner_join(eval_data, eval_data %>% group_by(speaker, round) %>% summarize(n=n()) %>% filter(n == 1) %>% select(-n))
@@ -343,6 +352,9 @@ cor_data %>% filter(!is.na(rate_tone)) %>% group_by(audio,visual) %>% summarize(
 brent_data <- brent_eval %>% inner_join(data$info %>% rename(speaker=id)) %>% mutate(correct = ifelse(is.na(rate_tone),F,tone == rate_tone))
 brent_data %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
 brent_data %>% filter(!is.na(rate_tone)) %>% group_by(audio,visual) %>% summarize(accuracy = sum(correct)/n(),n=n())
+brent_acc <- brent_eval %>% filter(!is.na(rate_tone)) %>% group_by(speaker) %>% summarize(acc = sum(rate_tone == tone)/n()) %>% rename(id=speaker) %>% inner_join(data$info)
+t.test(brent_acc %>% filter(audio == 'exemplar') %>% pull(acc), brent_acc %>% filter(audio == 'vocoded') %>% pull(acc))
+
 ```
 # Feedback
 
